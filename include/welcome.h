@@ -11,4 +11,5 @@ void getLocation(void);
 // Function to split a string into an array of strings based on spaces
 char **splitArgument(char *str);
 
+
 #endif // WELCOME_H

@@ -20,9 +20,9 @@ void displayWelcomeMessage() {
     printf(" / /  \\ \\  \\    Where cleverness meets efficiency.\n");
     printf("/_/    \\_\\__\\   Type 'help' for a list of commands.\n");
     printf("\n");
-    printf("Version 1.0.0 - Embrace the spirit of the fox.\n");
+    printf("Version 1.0.0 .\n");
     printf("\n");
-    printf("Explore more: https://github.com/alon19971\n");
+    printf("Explore more at my Github: https://github.com/alon19971\n");
     printf("\n");
     printf("\"Be like the fox who makes more tracks than necessary, some in the wrong direction. Practice resilience.\"\n");
     printf("\n");
@@ -86,7 +86,7 @@ void getLocation() {
     }
 }
 
-
+// Split argument function
 char **splitArgument(char *str) {
     char *subStr;
     int size = 1; // Start with 1 for the first token
