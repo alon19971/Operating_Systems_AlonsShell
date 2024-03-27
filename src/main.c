@@ -1,6 +1,6 @@
     #include <unistd.h>
-    #include "welcome.h"
-    #include "commands.h"
+    #include "episodeA.h"
+    #include "episodeB.h"
     #include "episodeC.h"
     #include <stdio.h>
     #include <stdlib.h>

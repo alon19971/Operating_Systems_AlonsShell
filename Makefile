@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -g -Iinclude
 LDFLAGS=
-SOURCES=src/welcome.c src/pathchange.c src/filecopy.c src/deletefile.c src/runprogram.c src/addcontent.c src/replacecontent.c src/printfile.c src/countlineswords.c src/main.c src/commands.c src/episodeC.c
+SOURCES=src/episodeA.c src/pathchange.c src/filecopy.c src/deletefile.c src/runprogram.c src/addcontent.c src/replacecontent.c src/printfile.c src/countlineswords.c src/main.c src/episodeB.c src/episodeC.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=AlonsShell
 
