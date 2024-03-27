@@ -9,7 +9,7 @@
     #define BUFF_SIZE PATH_MAX
 
 
-           // ----------EPISODE A FUNCTIONS----------  
+           // ----------EPISODE-A FUNCTIONS----------  
 
 
     // Define the welcome function when openning the shell

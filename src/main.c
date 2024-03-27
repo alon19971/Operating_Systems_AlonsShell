@@ -1,6 +1,7 @@
     #include <unistd.h>
     #include "welcome.h"
     #include "commands.h"
+    #include "episodeC.h"
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h> 
@@ -59,22 +60,30 @@
             }
             args[i] = NULL; 
 
-            // Command execution based on the first token
-                if (strcmp(args[0], "exit") == 0) {
-            printf("\nThank you for using my Shell, you have been Logout successfully!\n");
-            if (args[1] != NULL) {
-                logout(args[1]);
-            } else {
-                logout(NULL); // Or, adjust 'logout' to handle no arguments
-            }
-            // The program will exit after 'logout', so no further code will execute
+
+
+          
+             if (strcmp(args[0], "exit") == 0) {
+                printf("\nThank you for using my Shell, you have been Logout successfully!\n");
+                if (args[1] != NULL) {
+                    logout(args[1]);
+                } else {
+                    logout(NULL); // Or, adjust 'logout' to handle no arguments
+                }
+                // The program will exit after 'logout', so no further code will execute
             }
             else if (strcmp(args[0], "cd") == 0) {
                 cd(args); // Pass the parsed arguments to cd
             } else if (strcmp(args[0], "cp") == 0 && i >= 3) { // Check for 'cp' command and ensure enough arguments
                 cp(args); // Pass the parsed arguments to cp
-            } else {
-                printf("Command not recognized. Use 'exit' to logout, 'cd' to change directory, or 'cp' to copy files.\n");
+            } else if (strcmp(args[0], "delete") == 0) { // Use the new function name
+                delete(args);
+            }
+            else if (strstr(inputBuffer, "|")) {
+            prepareAndExecutePipe(inputBuffer); // Directly pass the whole command for piping
+            }
+             else {
+                printf("Command not recognized. Use 'exit' to logout, 'cd' to change directory, 'cp' to copy files, or 'delete' to delete files.\n");
             }
 
             free(inputBuffer); // Free the input buffer at the end of each iteration
