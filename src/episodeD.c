@@ -180,14 +180,10 @@ void readFile(char **args) {
 
 
 
-/**
- * Calculates and prints the number of lines or words in a file.
- * 
- * - args[1]: Specifies the counting mode ("-l" for lines, "-w" for words).
- * - args[2]: The file path.
- * 
- * If the file doesn't exist or the option is incorrect, it prints an error message.
- */
+// Calculates and prints the number of lines or words in a file.
+// args[1]: Specifies the counting mode ("-l" for lines, "-w" for words).
+// args[2]: The file path.
+// If the file doesn't exist or the option is incorrect, it prints an error message.
 void wordCount(char **args) {
     if (args[1] == NULL || args[2] == NULL) {
         fprintf(stderr, "wc: Missing option or file name\n");
@@ -232,3 +228,4 @@ void wordCount(char **args) {
 
     fclose(file);
 }
+

@@ -49,6 +49,7 @@
         printf("\033[0m");
     }
 
+
     // A function that returns the path of
     // the current terminal exactly like the original
     void getLocation() {
