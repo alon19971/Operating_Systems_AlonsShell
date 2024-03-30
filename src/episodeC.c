@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <dirent.h>
+#include <fcntl.h>
 
                // ----------EPISODE-C FUNCTIONS----------
 
@@ -126,3 +128,107 @@ void prepareAndExecutePipe(char *input) {
 
     mypipe(argv1, argv2); // Call mypipe with the prepared argument arrays
 }
+
+
+// Lists the contents of a directory   -
+// This function takes an array of arguments where the first argument after the command
+// can optionally be the path to a directory. If no path is provided, it defaults to the
+// current directory ('.'). It attempts to open the specified directory and iterates through
+// its entries, printing each entry's name to stdout. If the directory cannot be opened,
+// an error message is displayed.
+void listDirectoryContents(char **args) {
+    const char *dirPath = args[1] ? args[1] : ".";
+    DIR *dir = opendir(dirPath);
+    if (dir == NULL) {
+        perror("ls");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        printf("%s\n", entry->d_name);
+    }
+
+    closedir(dir);
+}
+
+
+// Displays the contents of a file to stdout    -
+// This function takes an array of arguments where the first argument after the command
+// should be the path to a file. It opens the specified file in read mode and reads its
+// contents line by line, printing each line to stdout. If the file cannot be opened,
+// an error message is displayed. This function is akin to the Unix 'cat' command and
+// is useful for viewing file contents directly from the shell.
+void displayFileContents(char **args) {
+    if (args[1] == NULL) {
+        printf("cat: Missing file operand\n");
+        return;
+    }
+
+    char *fileName = args[1]; // Assume the file name is the second argument
+
+    // Remove quotes from the file name if present
+    if (fileName[0] == '"' || fileName[0] == '\'') {
+        fileName++; // Move the pointer past the opening quote
+        // Find the closing quote and replace it with '\0'
+        char *closingQuote = strchr(fileName, fileName[0]);
+        if (closingQuote != NULL) {
+            *closingQuote = '\0';
+        }
+    }
+
+    FILE *file = fopen(fileName, "r");
+    if (file == NULL) {
+        perror("cat");
+        return;
+    }
+
+    char buffer[1024];
+    while (fgets(buffer, sizeof(buffer), file)) {
+        printf("%s", buffer);
+    }
+
+    fclose(file);
+}
+
+
+// Executes the echo command in a custom shell environment.
+// This function mimics the behavior of the Unix 'echo' command, allowing for output redirection.
+// It prints the provided arguments to stdout or redirects the output to a file if the '>' operator is detected.
+void echo(char **args) {
+    int fd = -1; // Initialize fd to -1 to indicate no file is opened initially
+    if (args[1] == NULL) {
+        printf("\n");
+        return;
+    }
+
+    // Check for redirection '>'
+    int i = 1;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0 && args[i + 1] != NULL) {
+            // Redirect output to a file
+            fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd == -1) {
+                perror("open");
+                return;
+            }
+            // Skip the '>' and file name in output
+            args[i] = NULL;
+            i -= 1;
+            break;
+        }
+        i++;
+    }
+
+    for (int j = 1; args[j] != NULL; j++) {
+        printf("%s", args[j]);
+        if (args[j + 1] != NULL) printf(" ");
+    }
+    printf("\n");
+
+    // If output was redirected (fd was changed), close the file descriptor
+    if (fd != -1) {
+        close(fd);
+    }
+}
+

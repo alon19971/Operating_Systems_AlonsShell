@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <libgen.h>
 
                      
                 // --------EPISODE D FUNCTIONS--------
@@ -15,57 +16,80 @@
 // This function modifies the string in place by adjusting the pointer
 // to skip leading quotes and null-terminating the string early to remove trailing quotes.
 // It handles both single ('') and double ("") quotes.
-void removeQuotes(char **str) {
-    char *p = *str;
-    size_t len = strlen(p);
+void removeQuotes(char *str) {
+    if (!str) return; // Guard against null pointers
 
-    // If the string starts and ends with quotes
-    if ((p[0] == '"' || p[0] == '\'') && (p[len - 1] == '"' || p[len - 1] == '\'')) {
-        p[len - 1] = '\0';  // Null terminate one character early to remove ending quote
-        ++p;  // Increment pointer to skip leading quote
+    size_t len = strlen(str);
+
+    // Check and remove leading quote
+    if (str[0] == '"' || str[0] == '\'') {
+        memmove(str, str + 1, len); // Shift everything to the left by one
+        len--; // Adjust length since we removed a character
     }
 
-    *str = p;  // Update the caller's pointer
+    // Check and remove trailing quote
+    if (len > 0 && (str[len - 1] == '"' || str[len - 1] == '\'')) {
+        str[len - 1] = '\0'; // Replace trailing quote with null terminator
+    }
 }
 
 
-// Moves a file from a source path to a destination path.
-// This function supports moving files into directories and renaming files.
-// It handles paths with spaces by requiring paths to be passed with quotes if spaces are present.
+// This function handles the moving of a file from a specified source path
+// to a destination path. It supports file paths containing spaces enclosed
+// in quotes. If the destination path is a directory, the source file is moved
+// into that directory, preserving its original name.
 void move(char **args) {
     if (args[1] == NULL || args[2] == NULL) {
         printf("move: missing file operand\n");
         return;
     }
 
-    // Remove quotes from paths if present
-    removeQuotes(&args[1]);
-    removeQuotes(&args[2]);
+    removeQuotes(args[1]);
+    removeQuotes(args[2]);
 
-    char *sourcePath = args[1];
-    char *destinationPath = args[2];
+    printf("After removing quotes, Source: '%s'\n", args[1]);
+    printf("After removing quotes, Destination: '%s'\n", args[2]);
+
     struct stat statbuf;
-    
-    // Check if destination is a directory
-    if (stat(destinationPath, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-        char finalDestPath[1024];
-        char *fileName = strrchr(sourcePath, '/');
-        fileName = fileName ? fileName + 1 : sourcePath;  // Get the base name of the file
-
-        snprintf(finalDestPath, sizeof(finalDestPath), "%s/%s", destinationPath, fileName);
-
-        if (rename(sourcePath, finalDestPath) != 0) {
-            perror("Error moving file");
-            return;
-        }
-    } else {
-        if (rename(sourcePath, destinationPath) != 0) {
-            perror("Error moving file");
-            return;
-        }
+    if (stat(args[1], &statbuf) == -1) {
+        perror("Error checking source file");
+        return;
     }
 
-    printf("Moved '%s' to '%s'\n", sourcePath, destinationPath);
+    char finalDestPath[1024];
+    if (stat(args[2], &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+        snprintf(finalDestPath, sizeof(finalDestPath), "%s/%s", args[2], basename(args[1]));
+    } else {
+        strncpy(finalDestPath, args[2], sizeof(finalDestPath));
+    }
+
+    printf("Attempting to move to: '%s'\n", finalDestPath);
+    if (rename(args[1], finalDestPath) != 0) {
+        perror("Error moving file");
+    } else {
+        printf("Moved '%s' to '%s'\n", args[1], finalDestPath);
+    }
+}
+
+
+// This function tokenizes the input string into separate arguments,
+// handling quoted arguments correctly. It skips leading and trailing quotes
+// and considers the space-separated parts as separate arguments.
+void parseInput(char* input, char** args, int maxArgs) {
+    int argc = 0;
+    // Example: move "test file" "test dir"
+    char *next_token = NULL;
+    char *p = strtok_r(input, " ", &next_token);
+    while (p != NULL && argc < maxArgs - 1) {
+        if ((*p == '\"' || *p == '\'') && p[strlen(p) - 1] == *p) { // Quoted argument
+            p[strlen(p) - 1] = '\0';  // Remove the last quote
+            args[argc++] = p + 1;     // Skip the first quote
+        } else {
+            args[argc++] = p;
+        }
+        p = strtok_r(NULL, " ", &next_token);
+    }
+    args[argc] = NULL;
 }
 
 
@@ -119,6 +143,7 @@ void processArgument(char **arg) {
         (*arg)[len - 1] = '\0'; // Remove the last quote
     }
 }
+
 
 // echolite - Overwrites the content of a given file with a specified string. 
 // This function simulates the behavior of the Unix 'echo' command with overwrite ('>') redirection.

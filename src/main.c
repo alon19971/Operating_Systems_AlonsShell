@@ -1,135 +1,113 @@
-        #include <unistd.h>
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <string.h>
-        #include <fcntl.h>
-            // Headers
-        #include "episodeA.h"
-        #include "episodeB.h"
-        #include "episodeC.h"
-        #include "episodeD.h" 
+/**
+ * @file main.c
+ * @brief A simple shell program implementation.
+ * 
+ * This file contains the main entry point and logic for a simple shell program.
+ * It handles user commands and executes corresponding functions.
+ */
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
 
+// Headers
+#include "episodeA.h"
+#include "episodeB.h"
+#include "episodeC.h"
+#include "episodeD.h"
 
+/**
+ * @brief The main entry point of the program.
+ * 
+ * This function serves as the main entry point of the program. It displays a welcome
+ * message, prompts the user for input, processes user commands, and executes
+ * corresponding functions. It continues to run until the user enters the 'exit' command.
+ * 
+ * @return 0 on successful execution, non-zero otherwise.
+ */
+int main() {
+    displayWelcomeMessage();
 
-        int main() {
-            displayWelcomeMessage();
+    // Allocate memory for input buffer
+    size_t bufsize = 1024;
+    char* inputBuffer = (char *)malloc(bufsize * sizeof(char));
+    if (!inputBuffer) {
+        perror("Unable to allocate input buffer");
+        return EXIT_FAILURE;
+    }
 
-            //   -------SplitArgument TEST-------
-            // char input[] = "cp file1.txt file2.txt";
-            // char **arguments = splitArgument(input);
+    // Main shell loop
+    while (1) {
+        getLocation();
+        printf("\nEnter command ('exit' to logout): ");
 
-            // if (arguments) {
-            //     for (int i = 0; arguments[i] != NULL; i++) {
-            //         printf("Argument %d: %s\n", i, arguments[i]);
-            //     }
-
-                
-            //     int i;
-            //     for (i = 0; arguments[i] != NULL; i++) {
-            //         free(arguments[i]); 
-            //     }
-            //     free(arguments); 
-            // }
-
-            char *inputBuffer;
-            size_t bufsize = 1024;
-            
-            while (1) {
-                getLocation();
-                printf("\nEnter command ('exit' to logout): ");
-
-                inputBuffer = (char *)malloc(bufsize * sizeof(char)); // Allocate input buffer
-                if (!inputBuffer) {
-                    perror("Unable to allocate input buffer");
-                    exit(EXIT_FAILURE);
-                }
-
-                // Get input from the user
-                if (getline(&inputBuffer, &bufsize, stdin) == -1) {
-                    printf("\nRead error or EOF detected. Exiting.\n");
-                    free(inputBuffer);
-                    continue;
-                }
-
-                // Remove newline character
-                inputBuffer[strcspn(inputBuffer, "\r\n")] = 0;
-                char* trimmedInput = trimSpaces(inputBuffer); // Apply trimming to handle leading/trailing spaces
-                
-                // Tokenization for command handling
-                char *args[1024]; 
-                int i = 0;
-                char* token = strtok(trimmedInput, " ");
-                while (token != NULL) {
-                    args[i++] = token;
-                    token = strtok(NULL, " ");
-                }
-                args[i] = NULL; 
-
-
-                // This segment of code represents the core functionality of a
-                // simple shell program, handling various shell
-                // commands and redirections. It processes user input to
-                // execute built-in shell commands or redirection operations.
-            
-                if (strcmp(args[0], "exit") == 0) {
-                    printf("\nThank you for using my Shell, you have been Logout successfully!\n");
-                if (args[1] != NULL) {
-                        logout(args[1]);
-                } 
-                else {
-                        logout(NULL); // Or, adjust 'logout' to handle no arguments
-                }
-                    // The program will exit after 'logout', so no further code will execute
-                }
-
-                else if (strcmp(args[0], "cd") == 0) {
-                    cd(args); // Pass the parsed arguments to cd
-                }
-
-                 else if (strcmp(args[0], "cp") == 0 && i >= 3) { // Check for 'cp' command and ensure enough arguments
-                    cp(args); // Pass the parsed arguments to cp
-                }
-
-                 else if (strcmp(args[0], "delete") == 0) { // Use the new function name
-                    delete(args);
-                }
-
-                else if (strstr(inputBuffer, "|")) {
-                prepareAndExecutePipe(inputBuffer); // Directly pass the whole command for piping
-                }
-
-                else if (strcmp(args[0], "move") == 0) {
-                    move(args); // Pass the parsed arguments to the move function
-                }
-
-                else if (strncmp(inputBuffer, "echo ", 5) == 0 && strstr(inputBuffer, " >> ")) {
-                // Directly pass the entire inputBuffer to echoppend function
-                char *echoppendArgs[] = {inputBuffer, NULL};
-                echoppend(echoppendArgs);
-                }
-
-                else if (strcmp(args[0], "echo") == 0 && strstr(inputBuffer, ">")) {
-                echorite(args); // Call echorite with the entire args array
-                }
-
-                else if (strcmp(args[0], "read") == 0) {
-                readFile(args);  
-                }
-
-                else if (strcmp(args[0], "wc") == 0) {
-    
-                wordCount(args);
-                }
-
-                else {
-                    printf("Command not recognized. Use 'exit' to logout, 'cd' to change directory, 'cp' to copy files, or 'delete' to delete files.\n");
-                }
-
-                free(inputBuffer); // Free the input buffer at the end of each iteration
-            }
-
-
-            return 0; 
+        // Get input from the user
+        if (getline(&inputBuffer, &bufsize, stdin) == -1) {
+            printf("\nRead error or EOF detected. Exiting.\n");
+            break;
         }
 
+        // Remove newline character
+        inputBuffer[strcspn(inputBuffer, "\r\n")] = '\0';
+
+        // Trim leading and trailing spaces
+        char* trimmedInput = trimSpaces(inputBuffer);
+
+        // Tokenize input into arguments
+        char* args[1024];
+        memset(args, 0, sizeof(args));
+        int i = 0;
+        char* token = strtok(trimmedInput, " ");
+        while (token != NULL) {
+            args[i++] = token;
+            token = strtok(NULL, " ");
+        }
+
+        // Handling of various commands
+        if (strcmp(args[0], "exit") == 0) {
+            printf("\nThank you for using my Shell, you have been Logout successfully!\n");
+            break; // Exit the loop to end the program
+        }
+        else if (strcmp(args[0], "ls") == 0) {
+            listDirectoryContents(args);
+        } 
+        else if (strcmp(args[0], "cat") == 0) {
+            displayFileContents(args);
+        }
+        else if (strcmp(args[0], "echo") == 0) {
+            echo(args);
+        }
+        else if (strcmp(args[0], "cd") == 0) {
+            cd(args);
+        }
+        else if (strcmp(args[0], "cp") == 0) {
+            cp(args);
+        }
+        else if (strcmp(args[0], "delete") == 0) {
+            delete(args);
+        }
+        else if (strcmp(args[0], "move") == 0) {
+            move(args);
+        }
+        else if (strstr(inputBuffer, " >> ")) {
+            echoppend(args); 
+        }
+        else if (strstr(inputBuffer, ">")) {
+            echorite(args);
+        }
+        else if (strcmp(args[0], "read") == 0) {
+            readFile(args);
+        }
+        else if (strcmp(args[0], "wc") == 0) {
+            wordCount(args);
+        } 
+        else {
+            printf("Command not recognized. Use 'exit' to logout, 'cd' to change directory, 'cp' to copy files, or 'delete' to delete files.\n");
+        }
+    }
+
+    free(inputBuffer); // Free the input buffer at the end
+    return 0;
+}

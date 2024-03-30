@@ -3,7 +3,8 @@
 #define EPISODED_H
 
 void move(char **args);
-void removeQuotes(char **str);
+void removeQuotes(char *str);
+void parseInput(char* input, char* args[], int argsSize);
 void echoppend(char **args);
 void echorite(char **args);
 void readFile(char **args);
