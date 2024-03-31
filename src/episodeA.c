@@ -32,6 +32,24 @@
     }
 
 
+    // Display a list of available commands.
+    void displayHelp() {
+    printf("Available commands:\n");
+    printf("ls       - List directory contents\n");
+    printf("cat      - Display file contents\n");
+    printf("echo     - Print arguments to the standard output\n");
+    printf("cd       - Change the current directory\n");
+    printf("cp       - Copy files\n");
+    printf("delete   - Delete files\n");
+    printf("move     - Move files\n");
+    printf(">>       - Append text to a file\n");
+    printf(">        - Redirect output to a file\n");
+    printf("read     - Read from a file and print its content\n");
+    printf("wc       - Count lines, words, and characters in a file\n");
+    printf("exit     - Exit the shell\n");
+}
+
+
     // ANSI Escape Codes for formatting
     void bold() {
         printf("\033[1m");

@@ -19,13 +19,7 @@
 #include "episodeD.h"
 
 /**
- * @brief The main entry point of the program.
- * 
- * This function serves as the main entry point of the program. It displays a welcome
- * message, prompts the user for input, processes user commands, and executes
- * corresponding functions. It continues to run until the user enters the 'exit' command.
- * 
- * @return 0 on successful execution, non-zero otherwise.
+ * @brief Display a welcome message when the shell starts.
  */
 int main() {
     displayWelcomeMessage();
@@ -65,6 +59,7 @@ int main() {
             token = strtok(NULL, " ");
         }
 
+
         // Handling of various commands
         if (strcmp(args[0], "exit") == 0) {
             printf("\nThank you for using my Shell, you have been Logout successfully!\n");
@@ -88,10 +83,13 @@ int main() {
         else if (strcmp(args[0], "delete") == 0) {
             delete(args);
         }
+        else if (strstr(inputBuffer, "|")) {
+        prepareAndExecutePipe(inputBuffer);
+        }
         else if (strcmp(args[0], "move") == 0) {
             move(args);
         }
-        else if (strstr(inputBuffer, " >> ")) {
+        else if (strstr(inputBuffer, ">>")) {
             echoppend(args); 
         }
         else if (strstr(inputBuffer, ">")) {
@@ -102,7 +100,11 @@ int main() {
         }
         else if (strcmp(args[0], "wc") == 0) {
             wordCount(args);
-        } 
+        }
+        else if (strcmp(args[0], "help") == 0) {
+            displayHelp();
+        }
+
         else {
             printf("Command not recognized. Use 'exit' to logout, 'cd' to change directory, 'cp' to copy files, or 'delete' to delete files.\n");
         }

@@ -5,6 +5,9 @@
 // Function to display the welcome message
 void displayWelcomeMessage();
 
+// function to display available commands of 'help'
+ void displayHelp();
+
 // Function to get and display the location (current directory, username, hostname)
 void getLocation(void);
 

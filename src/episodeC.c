@@ -62,32 +62,48 @@ void delete(char **path) {
 // It sets up a pipe, forks twice to create two processes for each command, redirects the output and input accordingly,
 // and then executes each command in its respective process.
 void mypipe(char **argv1, char **argv2) {
-    int fields[2];
-    pipe(fields); // This needs to be outside before fork() to setup pipe first
-
-    if (fork() == 0) {
-        // Child process for the first command
-        close(STDOUT_FILENO);
-        dup(fields[1]);
-        close(fields[1]);
-        close(fields[0]);
-        execvp(argv1[0], argv1);
-        exit(EXIT_FAILURE); // If execvp returns, it must have failed
-    } else {
-        // Parent process, fork again for the second command
-        if (fork() == 0) {
-            close(STDIN_FILENO);
-            dup(fields[0]);
-            close(fields[0]);
-            close(fields[1]);
-            execvp(argv2[0], argv2);
-            exit(EXIT_FAILURE); // If execvp returns, it must have failed
-        }
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
-    close(fields[0]);
-    close(fields[1]);
-    wait(NULL); // Wait for the first child
-    wait(NULL); // Wait for the second child
+
+    pid_t pid1, pid2;
+    pid1 = fork();
+
+    if (pid1 < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid1 == 0) {
+        // Child process for the first command
+        close(pipefd[0]); // Close reading end of the pipe
+        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to the writing end of the pipe
+        close(pipefd[1]); // Close writing end of the pipe
+        execvp(argv1[0], argv1);
+        perror("execvp argv1");
+        exit(EXIT_FAILURE); // If execvp returns, it must have failed
+    }
+
+    pid2 = fork();
+
+    if (pid2 < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid2 == 0) {
+        // Child process for the second command
+        close(pipefd[1]); // Close writing end of the pipe
+        dup2(pipefd[0], STDIN_FILENO); // Redirect stdin to the reading end of the pipe
+        close(pipefd[0]); // Close reading end of the pipe
+        execvp(argv2[0], argv2);
+        perror("execvp argv2");
+        exit(EXIT_FAILURE); // If execvp returns, it must have failed
+    }
+
+    // Parent process
+    close(pipefd[0]); // Close reading end of the pipe
+    close(pipefd[1]); // Close writing end of the pipe
+    waitpid(pid1, NULL, 0); // Wait for the first child process to finish
+    waitpid(pid2, NULL, 0); // Wait for the second child process to finish
 }
 
 

@@ -17,7 +17,7 @@
 // to skip leading quotes and null-terminating the string early to remove trailing quotes.
 // It handles both single ('') and double ("") quotes.
 void removeQuotes(char *str) {
-    if (!str) return; // Guard against null pointers
+    if (!str) return;
 
     size_t len = strlen(str);
 
@@ -34,6 +34,7 @@ void removeQuotes(char *str) {
 }
 
 
+
 // This function handles the moving of a file from a specified source path
 // to a destination path. It supports file paths containing spaces enclosed
 // in quotes. If the destination path is a directory, the source file is moved
@@ -44,26 +45,33 @@ void move(char **args) {
         return;
     }
 
+    // Remove quotes from source and destination paths
     removeQuotes(args[1]);
     removeQuotes(args[2]);
 
-    printf("After removing quotes, Source: '%s'\n", args[1]);
-    printf("After removing quotes, Destination: '%s'\n", args[2]);
+    printf("Source: '%s'\n", args[1]);
+    printf("Destination: '%s'\n", args[2]);
 
+    // Check if source file exists
     struct stat statbuf;
     if (stat(args[1], &statbuf) == -1) {
         perror("Error checking source file");
         return;
     }
 
+    // Construct final destination path
     char finalDestPath[1024];
     if (stat(args[2], &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+        // If the destination is a directory, append the base name of the source file
         snprintf(finalDestPath, sizeof(finalDestPath), "%s/%s", args[2], basename(args[1]));
     } else {
+        // Otherwise, use the provided destination path
         strncpy(finalDestPath, args[2], sizeof(finalDestPath));
     }
 
     printf("Attempting to move to: '%s'\n", finalDestPath);
+
+    // Move the file
     if (rename(args[1], finalDestPath) != 0) {
         perror("Error moving file");
     } else {
@@ -102,33 +110,48 @@ void echoppend(char **args) {
         fprintf(stderr, "echoppend: Missing arguments\n");
         return;
     }
-
-    // Find the last argument which should be the file path
-    int i = 0;
-    while (args[i] != NULL) i++;
-    char *filePath = args[i - 1];
+    
 
     // Open or create the file for appending
-    int fd = open(filePath, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int fd = open(args[2], O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fd == -1) {
         perror("echoppend");
         return;
     }
 
     // Concatenate the string arguments to form the message to append
-    char message[1024] = {0}; // Assuming a reasonable max length for simplicity
-    for (int j = 1; j < i - 1; j++) {
-        strcat(message, args[j]);
-        if (j < i - 2) strcat(message, " "); // Add spaces between words
+    size_t message_len = 0;
+    for (int i = 1; args[i] != NULL; i++) {
+        message_len += strlen(args[i]) + 1; // Add 1 for space or null terminator
     }
+
+    char *message = (char *)malloc(message_len + 1); // Allocate memory for the message
+    if (message == NULL) {
+        perror("echoppend: Memory allocation error");
+        close(fd);
+        return;
+    }
+
+    message[0] = '\0'; // Initialize message as an empty string
+
+    // Concatenate each argument with a space
+    for (int i = 1; args[i] != NULL; i++) {
+        strcat(message, args[i]);
+        if (args[i + 1] != NULL) strcat(message, " ");
+    }
+
     strcat(message, "\n"); // Add a newline at the end of the message
 
     // Write the message to the file
-    if (write(fd, message, strlen(message)) == -1) {
+    ssize_t bytes_written = write(fd, message, strlen(message));
+    if (bytes_written == -1) {
         perror("echoppend write");
+    } else if ((size_t)bytes_written < strlen(message)) {
+        fprintf(stderr, "echoppend: Incomplete write to file\n");
     }
 
-    // Close the file descriptor
+    // Clean up
+    free(message);
     close(fd);
 }
 
@@ -156,9 +179,9 @@ void echorite(char **args) {
         return;
     }
 
-    // Process string and file path to remove possible quotes
-    processArgument(&args[1]);
-    processArgument(&args[2]);
+    // Remove quotes from string and file path
+    removeQuotes(args[1]);
+    removeQuotes(args[2]);
 
     // Open (or create) the file for writing, truncating it to zero length
     int fd = open(args[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -223,24 +246,22 @@ void wordCount(char **args) {
         return;
     }
 
-    char buffer[1024];
+
     int lines = 0, words = 0;
     int inWord = 0;
+    int c;
 
-    while (fgets(buffer, sizeof(buffer), file)) {
-        char *ptr = buffer;
-        while (*ptr) {
-            if (*ptr == '\n') {
-                lines++;
-            }
-            if (isspace((unsigned char)*ptr)) {
-                inWord = 0;
-            } else if (!inWord) {
-                inWord = 1;
-                words++;
-            }
-            ptr++;
+    while ((c = fgetc(file)) != EOF) {
+        if (c == '\n') {
+            lines++;
         }
+        if (isspace(c)) {
+            inWord = 0;
+        } else if (!inWord) {
+            inWord = 1;
+            words++;
+        }
+
     }
 
     if (strcmp(option, "-l") == 0) {
