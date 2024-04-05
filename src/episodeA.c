@@ -19,7 +19,7 @@
         printf("      /  \\      _-'\n");
         printf("    /\\   \\    _-'\n");
         printf("   /  \\   \\ _-'\n");
-        printf("  / /\\ \\  \\     Alon's Shell\n");
+        printf("  / /\\ \\  \\     Alon's Shell :)\n");
         printf(" / /  \\ \\  \\    Where cleverness meets efficiency.\n");
         printf("/_/    \\_\\__\\   Type 'help' for a list of commands.\n");
         printf("\n");

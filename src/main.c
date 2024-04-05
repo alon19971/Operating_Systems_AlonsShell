@@ -1,6 +1,7 @@
-/**
- * @file main.c
- * @brief A simple shell program implementation.
+
+/*
+ * main.c
+ * A simple shell program implementation.
  * 
  * This file contains the main entry point and logic for a simple shell program.
  * It handles user commands and executes corresponding functions.
@@ -18,9 +19,7 @@
 #include "episodeC.h"
 #include "episodeD.h"
 
-/**
- * @brief Display a welcome message when the shell starts.
- */
+
 int main() {
     displayWelcomeMessage();
 
